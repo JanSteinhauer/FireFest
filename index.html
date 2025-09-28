@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Feuerwehr Getränke & Pfand – Kasse</title>
+    <style>
+        :root{
+            --bg:#fafafa;
+            --card:#ffffff;
+            --ink:#1b1b1f;
+            --ink-weak:#666;
+            --accent:#e53935;
+            --ok:#2e7d32;
+            --muted:#e9ecef;
+            --radius:18px;
+            --pad:14px;
+            --gap:12px;
+            --big:64px;
+        }
+        html,body{height:100%;}
+        body{
+            margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            background:var(--bg); color:var(--ink);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .wrap{
+            display:grid; gap: var(--gap);
+            grid-template-rows: auto auto 1fr; /* 3 rows */
+            height:100dvh; padding: clamp(10px,1.8vw,22px);
+        }
+        .row{
+            background:var(--card); border-radius: var(--radius);
+            box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 32px rgba(0,0,0,.05);
+            padding: clamp(10px,1.2vw,18px);
+        }
+        .row h2{ margin:4px 6px 14px; font-size: clamp(18px,2.2vw,22px); letter-spacing:.2px; }
+
+        /* Buttons */
+        .grid-buttons{ display:grid; gap: var(--gap); grid-template-columns: repeat(6, minmax(0,1fr)); }
+        @media (max-width: 900px){ .grid-buttons{ grid-template-columns: repeat(4, minmax(0,1fr)); } }
+        @media (max-width: 700px){ .grid-buttons{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
+
+        button{
+            height: var(--big); min-height: var(--big);
+            border-radius: 16px; border: 1px solid var(--muted);
+            background:#fff; font-size: clamp(16px, 2.2vw, 20px); font-weight: 600;
+            display:flex; align-items:center; justify-content:center; gap:10px;
+            cursor:pointer; user-select:none;
+            transition: transform .04s ease, background .2s ease, border-color .2s ease;
+        }
+        button:active{ transform: scale(.98); }
+        .pill{ height: calc(var(--big) - 8px); padding: 0 14px; }
+        .btn-accent{ background: var(--accent); color:#fff; border-color: transparent; }
+        .btn-ok{ background: var(--ok); color:#fff; border-color: transparent; }
+
+        /* Layout inside rows */
+        .row1{ display:grid; gap:var(--gap); grid-template-columns: 1fr; align-items:start; }
+        .row2{ display:grid; gap:var(--gap); grid-template-columns: 1fr 1fr; }
+        @media (max-width: 900px){ .row2{ grid-template-columns: 1fr; } }
+        .stack{ display:grid; gap: var(--gap); }
+
+        /* Row 3 – Summary */
+        .summary{ display:grid; gap: 14px; grid-template-columns: 1.1fr .9fr; align-items:start; }
+        @media (max-width: 1000px){ .summary{ grid-template-columns: 1fr; } }
+
+        .card{
+            border:1px solid var(--muted); border-radius: 14px; padding: var(--pad); background:#fff;
+        }
+        .lines{ display:grid; gap:10px; }
+        .line{ display:flex; justify-content:space-between; gap:10px; }
+        .line .lhs{ color: var(--ink-weak); }
+        .totals{ border-top:1px dashed var(--muted); padding-top:10px; margin-top:6px; }
+
+        .order-list{ display:grid; gap:8px; max-height: 36vh; overflow:auto; padding-right:6px; }
+        .item{ display:flex; justify-content:space-between; gap:8px; align-items:center; }
+        .qty{ min-width: 42px; text-align:right; font-variant-numeric: tabular-nums; }
+        .name{ flex:1; }
+        .price{ min-width: 80px; text-align:right; font-variant-numeric: tabular-nums; }
+
+        .big-num{ font-size: clamp(26px, 3.6vw, 42px); font-weight: 800; letter-spacing:.3px; }
+        .mono{ font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+        .footer-note{ color: var(--ink-weak); font-size:.9rem; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <!-- Row 1: Drinks (+ manual Pfand add) -->
+    <section class="row row1">
+        <div class="drinks">
+            <h2>1) Getränke hinzufügen</h2>
+            <div class="grid-buttons" id="drinkButtons">
+                <!-- JS inserts: Wasser, Softdrink, Bier, +1€ Pfand, +2€ Pfand -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Row 2: Received & Pfand returned -->
+    <section class="row row2">
+        <div class="stack">
+            <h2>2) Kunde gibt (Bargeld)</h2>
+            <div class="grid-buttons">
+                <button data-cash="20">20€</button>
+                <button data-cash="10">10€</button>
+                <button data-cash="5">5€</button>
+                <button data-cash="2">2€</button>
+                <button data-cash="1">1€</button>
+                <button data-cash="0.5">0,50€</button>
+            </div>
+        </div>
+        <div class="stack">
+            <h2>Pfand-Rückgabe (abziehen)</h2>
+            <div class="grid-buttons">
+                <button data-pfandret="1">Pfand −1€</button>
+                <button data-pfandret="2">Pfand −2€</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Row 3: Order + Totals -->
+    <section class="row summary">
+        <div class="card">
+            <h2>3) Bestellung</h2>
+            <div class="order-list" id="orderList"></div>
+        </div>
+        <div class="card">
+            <h2>Summe & Rückgeld</h2>
+            <div class="lines">
+                <div class="line"><span class="lhs">Getränke</span><strong class="mono" id="sumDrinks">0,00€</strong></div>
+                <div class="line"><span class="lhs">Pfand</span><strong class="mono" id="sumPfand">0,00€</strong></div>
+                <div class="line"><span class="lhs">− Pfand-Rückgabe</span><strong class="mono" id="sumPfandRet">0,00€</strong></div>
+                <div class="line totals"><span class="lhs"><strong>Zu zahlen</strong></span><span class="big-num mono" id="totalDue">0,00€</span></div>
+                <div class="line"><span class="lhs">Erhalten</span><strong class="mono" id="sumReceived">0,00€</strong></div>
+                <div class="line"><span class="lhs">Rückgeld</span><strong class="mono" id="change">0,00€</strong></div>
+                <div class="line"><span class="lhs">Fehlbetrag</span><strong class="mono" id="missing">0,00€</strong></div>
+            </div>
+            <div class="row-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                <button class="btn-ok pill" id="newSale">Neue Bestellung</button>
+                <button class="btn-accent pill" id="quickExact">Genau (alles ausgleichen)</button>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    // ===== Data Model =====
+    const catalog = {
+        wasser:   { label: "Wasser",    price: 1.5, pfand: 1 },
+        soft:     { label: "Softdrink", price: 3.0, pfand: 1 },
+        beer:     { label: "Bier",      price: 5.0, pfand: 2 },
+    };
+
+    // Order state
+    const state = {
+        items: {},            // key -> qty
+        pfandManual: 0,       // + manual added Pfand from buttons
+        pfandReturned: 0,     // − Pfand returned
+        received: 0           // cash received
+    };
+
+    // ===== Helpers =====
+    const fmt = n => (n||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + '€';
+    const clamp2 = n => Math.round(n * 100) / 100;
+
+    function addItem(key, delta=1){
+        state.items[key] = (state.items[key]||0) + delta;
+        if(state.items[key] <= 0) delete state.items[key];
+        render();
+    }
+    function addPfandManual(amount){ state.pfandManual = clamp2(state.pfandManual + amount); render(); }
+    function addPfandReturn(amount){ state.pfandReturned = clamp2(state.pfandReturned + amount); render(); }
+    function addCash(amount){ state.received = clamp2(state.received + amount); render(); }
+    function resetAll(){ state.items = {}; state.received = 0; state.pfandReturned = 0; state.pfandManual = 0; render(); }
+
+    // Compute totals
+    function compute(){
+        let drinks = 0, pfand = state.pfandManual;
+        for(const [key, qty] of Object.entries(state.items)){
+            const it = catalog[key];
+            drinks += it.price * qty;
+            pfand  += it.pfand * qty;
+        }
+        drinks = clamp2(drinks);
+        pfand = clamp2(pfand);
+        const totalDue = clamp2(drinks + pfand - state.pfandReturned);
+        const received = state.received;
+        const change = received - totalDue;           // negative -> missing
+        const changeOut = clamp2(Math.max(change, 0));
+        const missing = clamp2(Math.max(-change, 0));
+        return {drinks, pfand, totalDue, received, changeOut, missing};
+    }
+
+    // ===== UI =====
+    const drinkButtons = document.getElementById('drinkButtons');
+    const orderList = document.getElementById('orderList');
+
+    function buildCatalogButtons(){
+        const frag = document.createDocumentFragment();
+
+        // Drinks: show only names
+        for(const [key, it] of Object.entries(catalog)){
+            const btn = document.createElement('button');
+            btn.textContent = it.label;
+            btn.addEventListener('click', ()=> addItem(key, +1));
+            addLongPress(btn, ()=> addItem(key, -1)); // long press to subtract
+            frag.appendChild(btn);
+        }
+
+        // Manual Pfand add buttons requested in "Getränke hinzufügen"
+        const pf1 = document.createElement('button');
+        pf1.textContent = '+1€ Pfand';
+        pf1.addEventListener('click', ()=> addPfandManual(+1));
+        addLongPress(pf1, ()=> addPfandManual(-1));
+
+        const pf2 = document.createElement('button');
+        pf2.textContent = '+2€ Pfand';
+        pf2.addEventListener('click', ()=> addPfandManual(+2));
+        addLongPress(pf2, ()=> addPfandManual(-2));
+
+        frag.appendChild(pf1);
+        frag.appendChild(pf2);
+
+        drinkButtons.appendChild(frag);
+    }
+
+    function addLongPress(el, onLong){
+        let t; let pressed=false;
+        el.addEventListener('pointerdown', ()=>{ pressed=true; t=setTimeout(()=>{ if(pressed){ onLong(); pressed=false; } }, 450); });
+        el.addEventListener('pointerup',   ()=>{ pressed=false; clearTimeout(t); });
+        el.addEventListener('pointerleave',()=>{ pressed=false; clearTimeout(t); });
+    }
+
+    function renderOrderList(){
+        orderList.innerHTML='';
+        const frag = document.createDocumentFragment();
+
+        const keys = Object.keys(state.items);
+        if(keys.length===0 && state.pfandManual===0 && state.pfandReturned===0){
+            const p = document.createElement('div'); p.className='subtle';
+            p.textContent='Noch keine Positionen — tippe auf die Getränke oder Pfand.';
+            orderList.appendChild(p); return;
+        }
+
+        for(const key of keys){
+            const qty = state.items[key];
+            const it = catalog[key];
+            const line = document.createElement('div'); line.className='item';
+            const lhs = document.createElement('div'); lhs.className='qty mono'; lhs.textContent=qty+'×';
+            const name = document.createElement('div'); name.className='name'; name.textContent = it.label;
+            const rhs = document.createElement('div'); rhs.className='price mono'; rhs.textContent = fmt((it.price+it.pfand)*qty);
+            line.append(lhs,name,rhs);
+            frag.appendChild(line);
+        }
+
+        if(state.pfandManual !== 0){
+            const line = document.createElement('div'); line.className='item';
+            line.innerHTML = `<div class="qty mono"></div><div class="name">Pfand (manuell)</div><div class="price mono">${fmt(state.pfandManual)}</div>`;
+            frag.appendChild(line);
+        }
+
+        if(state.pfandReturned !== 0){
+            const line = document.createElement('div'); line.className='item';
+            line.innerHTML = `<div class="qty mono"></div><div class="name">− Pfand-Rückgabe</div><div class="price mono">−${fmt(state.pfandReturned)}</div>`;
+            frag.appendChild(line);
+        }
+
+        orderList.appendChild(frag);
+    }
+
+    function renderTotals(){
+        const s = compute();
+        document.getElementById('sumDrinks').textContent = fmt(s.drinks);
+        document.getElementById('sumPfand').textContent = fmt(s.pfand);
+        document.getElementById('sumPfandRet').textContent = fmt(state.pfandReturned);
+        document.getElementById('totalDue').textContent = fmt(s.totalDue);
+        document.getElementById('sumReceived').textContent = fmt(s.received);
+        document.getElementById('change').textContent = fmt(s.changeOut);
+        document.getElementById('missing').textContent = fmt(s.missing);
+    }
+
+    function render(){
+        renderOrderList();
+        renderTotals();
+    }
+
+    function init(){
+        buildCatalogButtons();
+
+        // cash buttons
+        document.querySelectorAll('[data-cash]').forEach(btn=>{
+            const v = parseFloat(btn.dataset.cash);
+            btn.addEventListener('click', ()=> addCash(v));
+            addLongPress(btn, ()=> addCash(-v));
+        });
+
+        // pfand return buttons
+        document.querySelectorAll('[data-pfandret]').forEach(btn=>{
+            const v = parseFloat(btn.dataset.pfandret);
+            btn.addEventListener('click', ()=> addPfandReturn(v));
+            addLongPress(btn, ()=> addPfandReturn(-v));
+        });
+
+        // actions
+        document.getElementById('newSale').addEventListener('click', resetAll);
+        document.getElementById('quickExact').addEventListener('click', ()=>{
+            const { totalDue, received } = compute();
+            if(totalDue > received){ addCash(clamp2(totalDue - received)); }
+        });
+
+        render();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

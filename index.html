@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Feuerwehr Getränke & Pfand – Kasse</title>
+    <title>Feuerwehr Winterfest – Getränke & Pfand Kasse</title>
     <style>
         :root{
             --bg:#fafafa;
@@ -89,9 +89,9 @@
     <!-- Row 1: Drinks (+ manual Pfand add) -->
     <section class="row row1">
         <div class="drinks">
-            <h2>1) Getränke hinzufügen</h2>
+            <h2>1) Getränke & Speisen hinzufügen</h2>
             <div class="grid-buttons" id="drinkButtons">
-                <!-- JS inserts: Wasser, Softdrink, Bier, +1€ Pfand, +2€ Pfand -->
+                <!-- JS inserts winter catalog + Pfand -->
             </div>
         </div>
     </section>
@@ -112,8 +112,8 @@
         <div class="stack">
             <h2>Pfand-Rückgabe (abziehen)</h2>
             <div class="grid-buttons">
-                <button data-pfandret="1">Pfand −1€</button>
-                <button data-pfandret="2">Pfand −2€</button>
+                <button data-pfandret="2">Pfand −2,00€</button>
+                <button data-pfandret="0.5">Pfand −0,50€</button>
             </div>
         </div>
     </section>
@@ -127,7 +127,7 @@
         <div class="card">
             <h2>Summe & Rückgeld</h2>
             <div class="lines">
-                <div class="line"><span class="lhs">Getränke</span><strong class="mono" id="sumDrinks">0,00€</strong></div>
+                <div class="line"><span class="lhs">Getränke & Speisen</span><strong class="mono" id="sumDrinks">0,00€</strong></div>
                 <div class="line"><span class="lhs">Pfand</span><strong class="mono" id="sumPfand">0,00€</strong></div>
                 <div class="line"><span class="lhs">− Pfand-Rückgabe</span><strong class="mono" id="sumPfandRet">0,00€</strong></div>
                 <div class="line totals"><span class="lhs"><strong>Zu zahlen</strong></span><span class="big-num mono" id="totalDue">0,00€</span></div>
@@ -137,7 +137,7 @@
             </div>
             <div class="row-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
                 <button class="btn-ok pill" id="newSale">Neue Bestellung</button>
-                <button class="btn-accent pill" id="quickExact">Genau (alles ausgleichen)</button>
+<!--                <button class="btn-accent pill" id="quickExact">Genau (alles ausgleichen)</button>-->
             </div>
         </div>
     </section>
@@ -147,9 +147,13 @@
 <script>
     // ===== Data Model =====
     const catalog = {
-        wasser:   { label: "Wasser",    price: 1.5, pfand: 1 },
-        soft:     { label: "Softdrink", price: 3.0, pfand: 1 },
-        beer:     { label: "Bier",      price: 5.0, pfand: 2 },
+        gluehwein_rot:   { label: "Glühwein Rot",              price: 4.0, pfand: 0 },
+        gluehwein_weiss: { label: "Glühwein Weiß",             price: 4.5, pfand: 0 },
+        kinder:          { label: "Kinderpunsch / Apfelsaft",  price: 3.0, pfand: 0 },
+        wasser_med:      { label: "Wasser Medium",             price: 2.5, pfand: 0 },
+        soft:            { label: "Softdrink",                 price: 3.0, pfand: 0 },
+        kaffee:          { label: "Kaffee",                    price: 1.5, pfand: 0 },
+        kuchen:          { label: "Kuchen",                    price: 2.0, pfand: 0 },
     };
 
     // Order state
@@ -180,7 +184,7 @@
         for(const [key, qty] of Object.entries(state.items)){
             const it = catalog[key];
             drinks += it.price * qty;
-            pfand  += it.pfand * qty;
+            pfand  += (it.pfand || 0) * qty;
         }
         drinks = clamp2(drinks);
         pfand = clamp2(pfand);
@@ -199,7 +203,7 @@
     function buildCatalogButtons(){
         const frag = document.createDocumentFragment();
 
-        // Drinks: show only names
+        // Winter drinks & food
         for(const [key, it] of Object.entries(catalog)){
             const btn = document.createElement('button');
             btn.textContent = it.label;
@@ -208,26 +212,29 @@
             frag.appendChild(btn);
         }
 
-        // Manual Pfand add buttons requested in "Getränke hinzufügen"
-        const pf1 = document.createElement('button');
-        pf1.textContent = '+1€ Pfand';
-        pf1.addEventListener('click', ()=> addPfandManual(+1));
-        addLongPress(pf1, ()=> addPfandManual(-1));
-
+        // Manual Pfand add buttons (Winter: 2,00 € & 0,50 €)
         const pf2 = document.createElement('button');
-        pf2.textContent = '+2€ Pfand';
+        pf2.textContent = '+2,00€ Pfand';
         pf2.addEventListener('click', ()=> addPfandManual(+2));
         addLongPress(pf2, ()=> addPfandManual(-2));
 
-        frag.appendChild(pf1);
+        const pf050 = document.createElement('button');
+        pf050.textContent = '+0,50€ Pfand';
+        pf050.addEventListener('click', ()=> addPfandManual(+0.5));
+        addLongPress(pf050, ()=> addPfandManual(-0.5));
+
         frag.appendChild(pf2);
+        frag.appendChild(pf050);
 
         drinkButtons.appendChild(frag);
     }
 
     function addLongPress(el, onLong){
         let t; let pressed=false;
-        el.addEventListener('pointerdown', ()=>{ pressed=true; t=setTimeout(()=>{ if(pressed){ onLong(); pressed=false; } }, 450); });
+        el.addEventListener('pointerdown', ()=>{
+            pressed=true;
+            t=setTimeout(()=>{ if(pressed){ onLong(); pressed=false; } }, 450);
+        });
         el.addEventListener('pointerup',   ()=>{ pressed=false; clearTimeout(t); });
         el.addEventListener('pointerleave',()=>{ pressed=false; clearTimeout(t); });
     }
@@ -238,30 +245,41 @@
 
         const keys = Object.keys(state.items);
         if(keys.length===0 && state.pfandManual===0 && state.pfandReturned===0){
-            const p = document.createElement('div'); p.className='subtle';
-            p.textContent='Noch keine Positionen — tippe auf die Getränke oder Pfand.';
-            orderList.appendChild(p); return;
+            const p = document.createElement('div');
+            p.className='subtle';
+            p.textContent='Noch keine Positionen — tippe auf Getränke, Speisen oder Pfand.';
+            orderList.appendChild(p);
+            return;
         }
 
         for(const key of keys){
             const qty = state.items[key];
             const it = catalog[key];
-            const line = document.createElement('div'); line.className='item';
-            const lhs = document.createElement('div'); lhs.className='qty mono'; lhs.textContent=qty+'×';
-            const name = document.createElement('div'); name.className='name'; name.textContent = it.label;
-            const rhs = document.createElement('div'); rhs.className='price mono'; rhs.textContent = fmt((it.price+it.pfand)*qty);
+            const line = document.createElement('div');
+            line.className='item';
+            const lhs = document.createElement('div');
+            lhs.className='qty mono';
+            lhs.textContent=qty+'×';
+            const name = document.createElement('div');
+            name.className='name';
+            name.textContent = it.label;
+            const rhs = document.createElement('div');
+            rhs.className='price mono';
+            rhs.textContent = fmt((it.price + (it.pfand||0)) * qty);
             line.append(lhs,name,rhs);
             frag.appendChild(line);
         }
 
         if(state.pfandManual !== 0){
-            const line = document.createElement('div'); line.className='item';
+            const line = document.createElement('div');
+            line.className='item';
             line.innerHTML = `<div class="qty mono"></div><div class="name">Pfand (manuell)</div><div class="price mono">${fmt(state.pfandManual)}</div>`;
             frag.appendChild(line);
         }
 
         if(state.pfandReturned !== 0){
-            const line = document.createElement('div'); line.className='item';
+            const line = document.createElement('div');
+            line.className='item';
             line.innerHTML = `<div class="qty mono"></div><div class="name">− Pfand-Rückgabe</div><div class="price mono">−${fmt(state.pfandReturned)}</div>`;
             frag.appendChild(line);
         }

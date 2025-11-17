@@ -101,19 +101,20 @@
         <div class="stack">
             <h2>2) Kunde gibt (Bargeld)</h2>
             <div class="grid-buttons">
+                <button data-cash="50">50€</button>
                 <button data-cash="20">20€</button>
                 <button data-cash="10">10€</button>
                 <button data-cash="5">5€</button>
                 <button data-cash="2">2€</button>
-                <button data-cash="1">1€</button>
+<!--                <button data-cash="1">1€</button>-->
                 <button data-cash="0.5">0,50€</button>
             </div>
         </div>
         <div class="stack">
             <h2>Pfand-Rückgabe (abziehen)</h2>
             <div class="grid-buttons">
-                <button data-pfandret="2">Pfand −2,00€</button>
-                <button data-pfandret="0.5">Pfand −0,50€</button>
+                <button data-pfandret="2">Tasse / Teller</button>
+                <button data-pfandret="0.5">Flasche / Gabel / Löffel</button>
             </div>
         </div>
     </section>
@@ -137,7 +138,7 @@
             </div>
             <div class="row-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
                 <button class="btn-ok pill" id="newSale">Neue Bestellung</button>
-<!--                <button class="btn-accent pill" id="quickExact">Genau (alles ausgleichen)</button>-->
+        <!--                <button class="btn-accent pill" id="quickExact">Genau (alles ausgleichen)</button>-->
             </div>
         </div>
     </section>
@@ -214,12 +215,12 @@
 
         // Manual Pfand add buttons (Winter: 2,00 € & 0,50 €)
         const pf2 = document.createElement('button');
-        pf2.textContent = '+2,00€ Pfand';
+        pf2.textContent = 'Tasse / Teller';
         pf2.addEventListener('click', ()=> addPfandManual(+2));
         addLongPress(pf2, ()=> addPfandManual(-2));
 
         const pf050 = document.createElement('button');
-        pf050.textContent = '+0,50€ Pfand';
+        pf050.textContent = 'Flasche / Gabel / Löffel';
         pf050.addEventListener('click', ()=> addPfandManual(+0.5));
         addLongPress(pf050, ()=> addPfandManual(-0.5));
 

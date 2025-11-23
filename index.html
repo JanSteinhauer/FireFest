@@ -80,6 +80,7 @@
 
         .big-num{ font-size: clamp(26px, 3.6vw, 42px); font-weight: 800; letter-spacing:.3px; }
         .mono{ font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+        .mono2{ font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; color:red; }
         .footer-note{ color: var(--ink-weak); font-size:.9rem; }
     </style>
 </head>
@@ -131,10 +132,10 @@
                 <div class="line"><span class="lhs">Getränke & Speisen</span><strong class="mono" id="sumDrinks">0,00€</strong></div>
                 <div class="line"><span class="lhs">Pfand</span><strong class="mono" id="sumPfand">0,00€</strong></div>
                 <div class="line"><span class="lhs">− Pfand-Rückgabe</span><strong class="mono" id="sumPfandRet">0,00€</strong></div>
-                <div class="line totals"><span class="lhs"><strong>Zu zahlen</strong></span><span class="big-num mono" id="totalDue">0,00€</span></div>
-                <div class="line"><span class="lhs">Erhalten</span><strong class="mono" id="sumReceived">0,00€</strong></div>
-                <div class="line"><span class="lhs">Rückgeld</span><strong class="mono" id="change">0,00€</strong></div>
-                <div class="line"><span class="lhs">Fehlbetrag</span><strong class="mono" id="missing">0,00€</strong></div>
+                <div class="line totals"><span class="big-num mono"><strong>Zu zahlen</strong></span><span class="big-num mono" id="totalDue">0,00€</span></div>
+                <div class="line"><span class="big-num mono">Erhalten</span><strong class="big-num mono" id="sumReceived">0,00€</strong></div>
+                <div class="line"><span class="big-num mono">Rückgeld</span><strong class="big-num mono2" id="change">0,00€</strong></div>
+<!--                <div class="line"><span class="lhs">Fehlbetrag</span><strong class="mono" id="missing">0,00€</strong></div>-->
             </div>
             <div class="row-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
                 <button class="btn-ok pill" id="newSale">Neue Bestellung</button>

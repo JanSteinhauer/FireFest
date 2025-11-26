@@ -114,8 +114,8 @@
         <div class="stack">
             <h2>Pfand-Rückgabe (abziehen)</h2>
             <div class="grid-buttons">
-                <button data-pfandret="2">Tasse / Teller</button>
-                <button data-pfandret="0.5">Flasche / Gabel / Löffel</button>
+                <button data-pfandret="2">Pfand 2€</button>
+                <button data-pfandret="0.5">Pfand 0.5€</button>
             </div>
         </div>
     </section>
@@ -154,8 +154,8 @@
         kinder:          { label: "Kinderpunsch / Apfelsaft",  price: 3.0, pfand: 0 },
         wasser_med:      { label: "Wasser Medium",             price: 2.5, pfand: 0 },
         soft:            { label: "Softdrink",                 price: 3.0, pfand: 0 },
-        kaffee:          { label: "Kaffee",                    price: 1.5, pfand: 0 },
-        kuchen:          { label: "Kuchen",                    price: 2.0, pfand: 0 },
+        kaffee:          { label: "Bier",                      price: 3.5, pfand: 0 },
+        // kuchen:          { label: "Kuchen",                    price: 2.0, pfand: 0 },
     };
 
     // Order state
@@ -216,12 +216,12 @@
 
         // Manual Pfand add buttons (Winter: 2,00 € & 0,50 €)
         const pf2 = document.createElement('button');
-        pf2.textContent = 'Tasse / Teller';
+        pf2.textContent = 'Pfand 2€';
         pf2.addEventListener('click', ()=> addPfandManual(+2));
         addLongPress(pf2, ()=> addPfandManual(-2));
 
         const pf050 = document.createElement('button');
-        pf050.textContent = 'Flasche / Gabel / Löffel';
+        pf050.textContent = 'Pfand 0.5€';
         pf050.addEventListener('click', ()=> addPfandManual(+0.5));
         addLongPress(pf050, ()=> addPfandManual(-0.5));
 
